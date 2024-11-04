@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "@types/node": "^22.7.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  },
+  "scripts": {
+    "dist": "tsc",
+    "start": "node dist/Main.js"
+  }
+}
