@@ -3,12 +3,22 @@ import { Device } from "./Devices/Device";
 import { Router } from "./Devices/Router";
 import { Switch } from "./Devices/Switch";
 import { Computer } from "./Devices/Computer";
+import { DeviceTypes } from "./DeviceTypes";
+import { Actions } from "./Actions";
+import { InputValidator } from "./InputValidator";
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
 export class View {
+  readline = require("node:readline/promises");
+  private inputValidator: InputValidator;
+  constructor(inputValidator: InputValidator) {
+    this.inputValidator = inputValidator;
+    console.log("\x1b[36m%s\x1b[0m", "Welcome to the Network Simulator!");
+  }
+
   selectDeviceParent(): Promise<string> {
     return new Promise((resolve) => {
       return rl.question(
@@ -24,54 +34,56 @@ export class View {
       );
     });
   }
-  selectDeviceType(): Promise<string> {
+
+  selectDeviceType(): Promise<DeviceTypes> {
+    let selectedDevice: DeviceTypes;
     return new Promise((resolve) => {
       return rl.question(
         "Choose device type (1. Router, 2. Switch, 3. Pc): ",
         (device) => {
           switch (device) {
             case "1":
-              device = "Router";
+              selectedDevice = DeviceTypes.ROUTER;
               break;
             case "2":
-              device = "Switch";
+              selectedDevice = DeviceTypes.SWITCH;
               break;
             case "3":
-              device = "Pc";
+              selectedDevice = DeviceTypes.PC;
               break;
           }
 
-          if (!this.inputValidator.validateIsInputDeviceTypeCorrect(device)) {
+          if (
+            //!this.inputValidator.validateIsInputDeviceTypeCorrect(selectedDevice)
+            !DeviceTypes.isValid(selectedDevice)
+          ) {
             console.log("Invalid device type. Please try again.");
             resolve(this.selectDeviceType());
           } else {
-            return resolve(device);
+            return resolve(selectedDevice);
           }
         }
       );
     });
   }
+
   showExitMessage() {
     console.log("Exiting the Network Simulator...");
     rl.close();
   }
-  readline = require("node:readline/promises");
-  private inputValidator: InputValidator;
-  constructor(inputValidator: InputValidator) {
-    this.inputValidator = inputValidator;
-    console.log("\x1b[36m%s\x1b[0m", "Welcome to the Network Simulator!");
-  }
 
-  selectAction(): Promise<string> {
+  selectAction(): Promise<Actions> {
+    let selectedAction: Actions;
     return new Promise((resolve) => {
       return rl.question(
         "Select action (1. Add device, 2. Show network, 9. Exit): ",
         (action) => {
-          if (!this.inputValidator.validateIsInputActionCorrect(action)) {
+          selectedAction = Actions.parse(action);
+          if (!Actions.isValid(selectedAction)) {
             console.log("Invalid action. Please try again.");
             resolve(this.selectAction());
           } else {
-            return resolve(action);
+            return resolve(selectedAction);
           }
         }
       );

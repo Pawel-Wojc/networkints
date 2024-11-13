@@ -1,43 +1,34 @@
+import { DeviceTypes } from "../DeviceTypes";
 import { Computer } from "./Computer";
 import { Device } from "./Device";
 import { NetworkDevice } from "./NetworkDevice";
 import { Router } from "./Router";
 
-export class Switch implements Device, NetworkDevice {
+export class Switch extends NetworkDevice implements Device {
   private parentDevice: NetworkDevice;
-  ipAddress: string;
-  lanPorts: Device[] = [];
+
   constructor(ipAddress: string, device: NetworkDevice) {
+    super();
     this.parentDevice = device;
     this.ipAddress = ipAddress;
   }
 
-  hasFreeLanPorts(): boolean {
-    if (this.lanPorts.length < 4) {
-      return true;
-    }
-    return false;
-  }
-  connectRouter(): boolean {
-    if (this.hasFreeLanPorts()) {
+  connectDevice(deviceTypeToAdd: DeviceTypes): boolean {
+    if (super.hasFreeLanPorts()) {
       let parent = this.getParentRouter();
-      this.lanPorts.push(new Router(parent.getNewIpAddress()));
-      return true;
-    }
-    return false;
-  }
-  connectSwitch(): boolean {
-    if (this.hasFreeLanPorts()) {
-      let parent = this.getParentRouter();
-      this.lanPorts.push(new Switch(parent.getNewIpAddress(), this));
-      return true;
-    }
-    return false;
-  }
-  connectPc(): boolean {
-    if (this.hasFreeLanPorts()) {
-      let parent = this.getParentRouter();
-      this.lanPorts.push(new Computer(parent.getNewIpAddress(), this));
+      switch (deviceTypeToAdd) {
+        case DeviceTypes.PC:
+          this.lanPorts.push(new Computer(parent.getNewIpAddress(), this));
+          break;
+        case DeviceTypes.SWITCH:
+          this.lanPorts.push(new Switch(parent.getNewIpAddress(), this));
+          break;
+        case DeviceTypes.ROUTER:
+          this.lanPorts.push(new Router(parent.getNewIpAddress()));
+          break;
+        default:
+          return false;
+      }
       return true;
     }
     return false;
@@ -48,7 +39,9 @@ export class Switch implements Device, NetworkDevice {
     if (this.parentDevice instanceof Router) {
       return this.parentDevice as Router;
     } else {
-      return this.getParentRouter();
+      if (this.parentDevice instanceof Switch) {
+        return this.parentDevice.getParentRouter();
+      }
     }
   }
 }

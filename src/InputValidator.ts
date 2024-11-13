@@ -1,5 +1,3 @@
-interface InputValidator {
-  validateIsInputActionCorrect(input: string): boolean;
-  validateIsInputDeviceTypeCorrect(input: string): boolean;
+export interface InputValidator {
   validateIsParentIpCorrect(input: string): boolean;
 }

@@ -2,23 +2,20 @@ import { Computer } from "./Computer";
 import { Device } from "./Device";
 import { Switch } from "./Switch";
 import { NetworkDevice } from "./NetworkDevice";
+import { DeviceTypes } from "../DeviceTypes";
 
-export class Router implements NetworkDevice, Device {
-  //parentDevice: Device; //router dont have parentDevice
-  ipAddress: string;
-  lanIpAddress: string;
+export class Router extends NetworkDevice implements Device {
   private ipReleases: string[] | undefined;
-  lanPorts: Device[] = [];
-  private parents: string[] = [];
 
   constructor(ipAddress: string) {
+    super();
     this.lanIpAddress = this.getNewIpAddress();
     this.ipAddress = ipAddress;
   }
+
   getParentDevicesIpAddresses(): string[] {
     var parentDevices: Device[] = this.searchFreeParentDevices(this);
     var result: string[] = [];
-    1;
     parentDevices.forEach((element) => {
       if (element instanceof Router) {
         result.push(element.lanIpAddress);
@@ -28,34 +25,26 @@ export class Router implements NetworkDevice, Device {
     });
     return result;
   }
+
   getParentDevice(): NetworkDevice[] {
     return this.searchFreeParentDevices(this);
   }
-  private hasFreeLanPorts(): boolean {
-    if (this.lanPorts.length < 4) {
-      return true;
-    }
-    return false;
-  }
 
-  connectRouter(): boolean {
-    if (this.hasFreeLanPorts()) {
-      this.lanPorts.push(new Router(this.getNewIpAddress()));
-      return true;
-    }
-    return false;
-  }
-
-  connectSwitch(): boolean {
-    if (this.hasFreeLanPorts()) {
-      this.lanPorts.push(new Switch(this.getNewIpAddress(), this));
-      return true;
-    }
-    return false;
-  }
-  connectPc(): boolean {
-    if (this.hasFreeLanPorts()) {
-      this.lanPorts.push(new Computer(this.getNewIpAddress(), this));
+  connectDevice(deviceTypeToAdd: DeviceTypes): boolean {
+    if (super.hasFreeLanPorts()) {
+      switch (deviceTypeToAdd) {
+        case DeviceTypes.PC:
+          this.lanPorts.push(new Computer(this.getNewIpAddress(), this));
+          break;
+        case DeviceTypes.SWITCH:
+          this.lanPorts.push(new Switch(this.getNewIpAddress(), this));
+          break;
+        case DeviceTypes.ROUTER:
+          this.lanPorts.push(new Router(this.getNewIpAddress()));
+          break;
+        default:
+          return false;
+      }
       return true;
     }
     return false;
